@@ -7,6 +7,8 @@ from app.models import UserProfile
 from app.forms import LoginForm
 from app.forms import UploadForm
 from werkzeug.security import check_password_hash
+from flask import send_from_directory
+from app.utils import get_uploaded_images
 
 ###
 # Routing for your application.
@@ -24,9 +26,18 @@ def about():
     return render_template('about.html', name="Mary Jane")
 
 
+
+@app.route('/uploads/<filename>')
+def get_image(filename):
+    return send_from_directory(os.path.join(os.getcwd(), 'uploads'), filename)
+
+@app.route('/files')
+def files():
+    images = get_uploaded_images()
+    return render_template('files.html', images=images)
+
 @app.route('/upload', methods=['POST', 'GET'])
 @login_required
-
 def upload():
     # Instantiate your form class
     form = UploadForm()
@@ -75,6 +86,14 @@ def login():
         flash('Logged in successfully')
         return redirect(url_for("upload"))  # The user should be redirected to the upload form instead
     return render_template("login.html", form=form)
+
+@app.route("/logout")
+@login_required
+def logout():
+    logout_user()
+    flash('Logging Out...','Success')
+    return redirect(url_for('home'))
+
 
 # user_loader callback. This callback is used to reload the user object from
 # the user ID stored in the session
